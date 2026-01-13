@@ -962,7 +962,7 @@ else:
                        
                         
                         # Membuat array input
-                        input_data = (gender_num, usia, bb_lahir, tb_lahir, 
+                        input_data = (usia, gender_num, bb_lahir, tb_lahir, 
                                     bb_sekarang, tb_sekarang)
                         
                         input_data_as_numpy_array = np.array(input_data).reshape(1, -1)
