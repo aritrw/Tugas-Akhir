@@ -542,6 +542,7 @@ def init_database():
         TB_Lahir REAL,
         BB_Sekarang REAL,
         TB_Sekarang REAL,
+        LiLA REAL,
         hasil_prediksi TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
@@ -917,9 +918,9 @@ else:
             
             data_summary = pd.DataFrame({
                 'Parameter': ['Nama Anak', 'Nama Ayah', 'Nama Ibu', 'Jenis Kelamin', 'Usia (bulan)', 'Berat Badan Lahir (kg)', 
-                            'Tingggi Badan Lahir (cm)', 'Berat Berat Sekarang (kg)', 'Tinggi Badan Sekarang (cm)'],
+                            'Tingggi Badan Lahir (cm)', 'Berat Berat Sekarang (kg)', 'Tinggi Badan Sekarang (cm)', 'Lingkar Lengan Atas (cm)'],
                 'Nilai': [str(result['Nama']), str(result['Nama_Ayah']), str(result['Nama_Ibu']), str(result['Jenis_Kelamin']), str(result['Usia']), str(result['BB_Lahir']), 
-                         str(result['TB_Lahir']), str(result['BB_Sekarang']), str(result['TB_Sekarang'])]
+                         str(result['TB_Lahir']), str(result['BB_Sekarang']), str(result['TB_Sekarang']), str(result['LiLA'])]
             })
             
             st.table(data_summary.set_index('Parameter'))
@@ -951,7 +952,7 @@ else:
                     tb_lahir = st.number_input("📏 Tinggi Badan Lahir (cm)", placeholder= "Masukkan Tinggi Badan Lahir Anak", min_value=30.0, max_value=60.0, step=0.1, value=None)
                     bb_sekarang = st.number_input("⚖️ Berat Badan Sekarang (kg)", placeholder= "Masukkan Berat Badan Saat Pemeriksaan",min_value=1.0, max_value=20.0, step=0.1, value=None)
                     tb_sekarang = st.number_input("📏 Tinggi Badan Sekarang (cm)", placeholder= "Masukkan Tinggi Badan Saat Pemeriksaan", min_value=30.0, max_value=120.0, step=0.1, value=None)
-                    
+                    LiLA = st.number_input("📏 Lingkar Lengan Atas (cm)", placeholder= "Masukkan Lingkar Lengan Atas", min_value=1.0, max_value=30.0, step=1.0, value=None)
                 
                 submitted = st.form_submit_button("🔍 Analisis Risiko Stunting", use_container_width=True)
                 
@@ -963,7 +964,7 @@ else:
                         
                         # Membuat array input
                         input_data = (usia, gender_num, bb_lahir, tb_lahir, 
-                                    bb_sekarang, tb_sekarang)
+                                    bb_sekarang, tb_sekarang, LiLA)
                         
                         input_data_as_numpy_array = np.array(input_data).reshape(1, -1)
                         
@@ -982,10 +983,10 @@ else:
                         c.execute('''
                         INSERT INTO prediksi_stunting 
                         (user_id, Nama, Nama_Ayah, Nama_Ibu, Jenis_Kelamin, Usia, BB_Lahir, TB_Lahir, 
-                         BB_Sekarang, TB_Sekarang, hasil_prediksi) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         BB_Sekarang, TB_Sekarang, LiLA, hasil_prediksi) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (user_info['id'], nama, nama_ayah, nama_ibu, gender, usia, bb_lahir, tb_lahir, 
-                              bb_sekarang, tb_sekarang, hasil_prediksi))
+                              bb_sekarang, tb_sekarang,LiLA, hasil_prediksi))
                         conn.commit()
                         conn.close()
                         
@@ -1001,6 +1002,7 @@ else:
                             'TB_Lahir': tb_lahir,
                             'BB_Sekarang': bb_sekarang,
                             'TB_Sekarang': tb_sekarang,
+                            'LiLA' : LiLA,
                             'prediksi': prediction[0]
                         }
                         
@@ -1022,7 +1024,7 @@ if 'show_history' in st.session_state and st.session_state.show_history:
     conn = sqlite3.connect('stunting_app.db')
     df_history = pd.read_sql_query('''
         SELECT Nama, Nama_Ayah, Nama_Ibu, Jenis_Kelamin, Usia,
-               BB_Lahir, TB_Lahir, BB_Sekarang, TB_Sekarang,
+               BB_Lahir, TB_Lahir, BB_Sekarang, TB_Sekarang, LiLA,
                hasil_prediksi, created_at
         FROM prediksi_stunting
         WHERE user_id = ?
@@ -1038,7 +1040,7 @@ if 'show_history' in st.session_state and st.session_state.show_history:
         df_history.columns = [
             'Nama', 'Nama Ayah', 'Nama Ibu', 'Jenis Kelamin',
             'Usia (bln)', 'BB Lahir (kg)', 'TB Lahir (cm)',
-            'BB Sekarang (kg)', 'TB Sekarang (cm)',
+            'BB Sekarang (kg)', 'TB Sekarang (cm)', 'LiLA (cm)',
             'Hasil Prediksi', 'Tanggal Periksa'
         ]
 
